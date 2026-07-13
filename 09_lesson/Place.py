@@ -6,6 +6,7 @@ Base = declarative_base()
 
 engine = create_engine("postgresql://postgres:123@localhost:5432/postgres")
 
+
 class Place(Base):
     __tablename__ = 'places'
 

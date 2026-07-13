@@ -2,10 +2,23 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from Place import Place
+from dotenv import load_dotenv
+import os
 
-engine = create_engine("postgresql://postgres:123@localhost:5432/postgres")
+
+load_dotenv()
+
+db_user = os.getenv("DB_USER")
+db_password = os.getenv("DB_PASSWORD")
+db_host = os.getenv("DB_HOST")
+db_port = os.getenv("DB_PORT")
+db_name = os.getenv("DB_NAME")
+
+engine = create_engine(
+    f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}")
 
 Session = sessionmaker(bind=engine)
+
 
 @pytest.fixture
 def session():
@@ -13,8 +26,8 @@ def session():
     yield session
     session.close()
 
-@pytest.mark.usefixtures("session")
 
+@pytest.mark.usefixtures("session")
 def create_place(session, name='Park', size=500):
     # Создание тестовой записи
     new_place = Place(place_name=name, place_size=size)
@@ -22,12 +35,13 @@ def create_place(session, name='Park', size=500):
     session.commit()
     return new_place
 
+
 def test_get_all_places(session):
     # Запрос на получение всех записей из таблицы places
     places = session.query(Place).all()
-    
     # Проверка, что результат не пустой список (для примера)
     assert len(places) > 0, "Список мест пуст"
+
 
 def test_get_new_places():
 
@@ -46,6 +60,7 @@ def test_get_new_places():
     session.delete(new_place)
     session.commit()
 
+
 def test_update_place(session):
     # Создание тестовой записи
     new_place = create_place(session)
@@ -55,11 +70,13 @@ def test_update_place(session):
     session.commit()
 
     # Проверка изменений
-    updated_place = session.query(Place).filter_by(place_id=new_place.place_id).one()
+    updated_place = session.query(Place).filter_by(
+        place_id=new_place.place_id).one()
     assert updated_place.place_size == 600, "Размер места не обновился"
 
     session.delete(new_place)
     session.commit()
+
 
 def test_delete_place(session):
     # Создание тестовой записи
@@ -70,5 +87,6 @@ def test_delete_place(session):
     session.commit()
 
     # Проверка удаления
-    deleted_place = session.query(Place).filter_by(place_id=new_place.place_id).first()
+    deleted_place = session.query(Place).filter_by(
+        place_id=new_place.place_id).first()
     assert deleted_place is None, "Запись не была удалена"
